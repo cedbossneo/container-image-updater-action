@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"os"
 
 	"github.com/sirupsen/logrus"
 
@@ -58,11 +61,11 @@ func main() {
 			}
 		}
 		if !found {
-			fmt.Println("::set-output name=needs-update::true")
+			ioutil.WriteFile(os.Getenv("GITHUB_STATE"), []byte("needs-update=true\n"), fs.ModeAppend)
 			return
 		}
 	}
-	fmt.Println("::set-output name=needs-update::false")
+	ioutil.WriteFile(os.Getenv("GITHUB_STATE"), []byte("needs-update=false\n"), fs.ModeAppend)
 }
 
 func subset(a, b []digest.Digest) bool {

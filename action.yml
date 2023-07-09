@@ -8,6 +8,9 @@ inputs:
   image:
     description: "Container image"
     required: true
+  platform:
+    description: "Container image platform"
+    required: false
   base-reg-username:
     description: "Base Image Container registry username"
     required: false
@@ -32,6 +35,8 @@ runs:
     - ${{ inputs.base-image }}
     - --image
     - ${{ inputs.image }}
+    - --platform
+    - ${{ inputs.platform }}
     - --base-reg-username
     - ${{ inputs.base-reg-username }}
     - --base-reg-password

@@ -20,11 +20,13 @@ var (
 	baseImage, image                                     string
 	baseImageRegistryUsername, baseImageRegistryPassword string
 	imageRegistryUsername, imageRegistryPassword         string
+	platform                                             string
 )
 
 func init() {
 	flag.StringVar(&baseImage, "base-image", "", "Base Image")
 	flag.StringVar(&image, "image", "", "Image")
+	flag.StringVar(&platform, "platform", "", "Platform")
 	flag.StringVar(&baseImageRegistryUsername, "base-reg-username", "", "Base Image Registry Username")
 	flag.StringVar(&baseImageRegistryPassword, "base-reg-password", "", "Base Image Registry Password")
 	flag.StringVar(&imageRegistryUsername, "image-reg-username", "", "Image Registry Username")
@@ -77,7 +79,7 @@ func subset(a, b []digest.Digest) bool {
 
 func parseImage(name, username, password string) (digests [][]digest.Digest, err error) {
 	resolver := util.NewResolver(username, password, false,
-		false)
+		false, "")
 	memoryStore := store.NewMemoryStore()
 	imageRef, err := util.ParseName(name)
 	if err != nil {
@@ -121,6 +123,9 @@ func parseImage(name, username, password string) (digests [][]digest.Digest, err
 func parseList(cs *store.MemoryStore, index ocispec.Index) (digests [][]digest.Digest, err error) {
 	for _, img := range index.Manifests {
 		_, db, _ := cs.Get(img)
+		if platform != "" && img.Platform != nil && img.Platform.OS+"/"+img.Platform.Architecture != platform {
+			continue
+		}
 		switch img.MediaType {
 		case ocispec.MediaTypeImageManifest, types.MediaTypeDockerSchema2Manifest:
 			var man ocispec.Manifest
@@ -134,12 +139,15 @@ func parseList(cs *store.MemoryStore, index ocispec.Index) (digests [][]digest.D
 			return nil, fmt.Errorf("Unknown media type for further display: %s\n", img.MediaType)
 		}
 	}
-	return
+	if len(digests) == 0 {
+		return nil, fmt.Errorf("no matching platform found")
+	}
+	return digests, nil
 }
 
 func getDigests(layers []ocispec.Descriptor) (digests []digest.Digest) {
 	for _, layer := range layers {
 		digests = append(digests, layer.Digest)
 	}
-	return
+	return digests
 }

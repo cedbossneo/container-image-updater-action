@@ -1,4 +1,4 @@
-FROM ghcr.io/mkumatag/container-image-updater-action:v1.0
+FROM ghcr.io/cedbossneo/container-image-updater-action:v1.0
 
 # Copies your code file from your action repository to the filesystem path `/` of the container
 #COPY entrypoint.sh /entrypoint.sh
